@@ -1,14 +1,64 @@
 #### Génériques ####
+#' @title Refresh the OAuth connection
+#' @name refresh
+#' @description The function refresh the current authorization with the \code{refresh_token}.
+#'
+#' @usage refresh(object)
+#'
+#' @param object an rQivivo object.
+#'
+#' @exportMethod refresh
+#' @rdname refresh
 methods::setGeneric(name = "refresh",
                     def = function(object)
                     {
                        standardGeneric("refresh")
                     })
+
+#' @title GET some information about the thermostat
+#' @name getThermostat
+#' @description The function provides get resquest about the thermostat.
+#'
+#' @usage getThermostat(object, type)
+#'
+#' @inheritParams refresh object
+#' @param type character: type of \code{\link[httr]{GET}} request:
+#' \itemize{
+#'    \item info: gives some information about the device;
+#'    \item temperature: gives the temperature;
+#'    \item humidity: gives the humidity;
+#'    \item presence: gives the last presence.
+#' }
+#'
+#' @return The function returns the content of the get request.
+#' @exportMethod getThermostat
+#' @rdname getThermostat
 methods::setGeneric(name = "getThermostat",
                     def = function(object, type)
                     {
                        standardGeneric("getThermostat")
                     })
+
+#' @title POST or GET the absence
+#' @name absence
+#' @description The function changes the thermostat into the frost temperature or cancels the absence mode.
+#'
+#' @usage absence(object, request, body)
+#'
+#' @inheritParams refresh object
+#' @param request character:
+#' \itemize{
+#'    \item post: sets the thermostat into absence mode (i.e. the frost temperature);
+#'    \item del: removes the absence mode.
+#' }
+#' @param body list: only if \code{request = "post"}:
+#' \itemize{
+#'    \item start_date POSIXt: the starting date of the absence;
+#'    \item end_date POSIXt: the ending date of the absence.
+#' }
+#'
+#' @exportMethod absence
+#' @rdname absence
 methods::setGeneric(name = "absence",
                     def = function(object, request, body)
                     {
@@ -16,13 +66,35 @@ methods::setGeneric(name = "absence",
                     })
 #### Classe ####
 methods::setOldClass("Token2.0")
+#' @title rQivivo class
+#' @description rQivivo class with OAuth2.0 using httr for API connection.
+#' See \href{https://documenter.getpostman.com/view/1147709/qivivo-api/2MsDNL#d64f1f8b-f8e9-6470-50d5-980393886046}{Qivivo API}.
+#' @name rQivivo-class
+#'
+#' @slot token Token2.0: return of \code{\link[httr]{oauth2.0_token}} function.
+#' @slot UUID character: UUID of the thermostat.
+#'
+#' @rdname rQivivo-class
+#' @exportClass rQivivo
 methods::setClass(Class = "rQivivo",
                   representation = methods::representation(token = "Token2.0",
                                                            UUID = "character")
 )
 
 #### Constructeur ####
-connect <- function(appName, clientID, secretID, redirectURI)
+#' @name rQivivo
+#' @title rQivivo object constructor
+#' @description The function is the constructor of rQivivo class. See \url{https://account.qivivo.com/}.
+#'
+#' @param appName character: (optional) name of the private API.
+#' @param clientID character: client ID of the private API.
+#' @param secretID character: secret ID of the private API.
+#' @param redirectURI character: redirected URI of the private API. Use locate IP for RStudio.
+#'
+#' @return The function returns an rQivivo object.
+#' @export
+#' @rdname rQivivo
+rQivivo <- function(appName, clientID, secretID, redirectURI)
 {
    token <- httr::oauth2.0_token(endpoint = httr::oauth_endpoint(request = NULL,
                                                                  authorize = "https://account.qivivo.com",
@@ -43,7 +115,7 @@ connect <- function(appName, clientID, secretID, redirectURI)
    UUID <- httr::content(httr::GET(url = "https://data.qivivo.com/api/v2/devices",
                                    httr::accept_json(),
                                    httr::add_headers(Authorization = sprintf("%s %s",
-                                                                             object@token$credentials$token_type,
+                                                                             token$credentials$token_type,
                                                                              token$credentials$access_token)),
                                    config = list(token = token)))$devices[[1]]$uuid
 
@@ -54,7 +126,7 @@ connect <- function(appName, clientID, secretID, redirectURI)
 
 #### Impression ####
 methods::setMethod(f = "show",
-                   signature = "rQivivo",
+                   signature = methods::signature(object = "rQivivo"),
                    definition = function(object)
                    {
                       cat("An object of class \"rQvivio\"\n")
@@ -65,8 +137,11 @@ methods::setMethod(f = "show",
 
 
 #### refresh token ####
+#' @name refresh
+#' @rdname refresh
+#' @aliases refresh
 methods::setMethod(f = "refresh",
-                   signature = "rQivivo",
+                   signature = methods::signature(object = "rQivivo"),
                    definition = function(object)
                    {
                       objectName <- deparse(substitute(object))
@@ -88,8 +163,11 @@ methods::setMethod(f = "refresh",
                    })
 
 #### get thermostat ####
+#' @name getThermostat
+#' @rdname getThermostat
+#' @aliases getThermostat
 methods::setMethod(f = "getThermostat",
-                   signature = "rQivivo",
+                   signature = methods::signature(object = "rQivivo"),
                    definition = function(object, type)
                    {
                       if (all(type != c("info", "temperature", "humidity", "presence")) || length(type) != 1)
@@ -107,8 +185,12 @@ methods::setMethod(f = "getThermostat",
                    })
 
 #### absence ####
+#' @name absence
+#' @rdname absence
+#' @inheritParams refresh
+#' @aliases absence
 methods::setMethod(f = "absence",
-                   signature = "rQivivo",
+                   signature = methods::signature(object = "rQivivo"),
                    definition = function(object, request = c("post","del"), body = list())
                    {
                       switch(EXPR = request,
