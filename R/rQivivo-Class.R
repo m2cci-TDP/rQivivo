@@ -1,3 +1,20 @@
+#### Génériques ####
+methods::setGeneric(name = "refresh",
+                    def = function(object)
+                    {
+                       standardGeneric("refresh")
+                    })
+methods::setGeneric(name = "getThermostat",
+                    def = function(object, type)
+                    {
+                       standardGeneric("getThermostat")
+                    })
+methods::setGeneric(name = "absence",
+                    def = function(object, request, body)
+                    {
+                       standardGeneric("absence")
+                    })
+#### Classe ####
 methods::setOldClass("Token2.0")
 methods::setClass(Class = "rQivivo",
                   representation = methods::representation(token = "Token2.0",
@@ -5,10 +22,7 @@ methods::setClass(Class = "rQivivo",
 )
 
 #### Constructeur ####
-connect <- function(appName = "QivivoTheo",
-                    clientID = "DMZEHQiwDg0UuhWNn1M7lCjjxoxmDqKxfZnl86rU",
-                    secretID = "2UefAS8Qf9pFvKndoXXNHWZuoURfAe2lztm5vssJIMUnjlUBlL",
-                    redirectURI = "http://127.0.0.1:1410")
+connect <- function(appName, clientID, secretID, redirectURI)
 {
    token <- httr::oauth2.0_token(endpoint = httr::oauth_endpoint(request = NULL,
                                                                  authorize = "https://account.qivivo.com",
@@ -82,11 +96,65 @@ methods::setMethod(f = "getThermostat",
                       {
                          stop("L'argument \"type\" ne peut prendre comme valeur seulement \"info\", \"temperature\", \"humidity\" ou \"presence\"")
                       }
-                      response <- httr::GET(url = sprintf("https://data.qivivo.com/api/v2/devices/thermostats/%s/%s", object@UUID, type),
+                      response <- httr::GET(url = sprintf("https://data.qivivo.com/api/v2/devices/thermostats/%s/%s",
+                                                          object@UUID, type),
                                             httr::accept_json(),
                                             httr::add_headers(Authorization = sprintf("%s %s",
                                                                                       object@token$credentials$token_type,
                                                                                       object@token$credentials$access_token)),
                                             config = list(token = object@token))
                       return(httr::content(response))
+                   })
+
+#### absence ####
+methods::setMethod(f = "absence",
+                   signature = "rQivivo",
+                   definition = function(object, request = c("post","del"), body = list())
+                   {
+                      switch(EXPR = request,
+                             "post" = {
+                                if (any(names(body) != c("start_date","end_date")))
+                                {
+                                   stop("\"body\" est une liste comportant 2 slots \"start_date\" et \"end_date\"")
+                                }
+                                else
+                                {
+                                   if (!inherits(body$start_date, "POSIXt"))
+                                   {
+                                      stop("\"body$start_date\" doit être de classe \"POSIXt\"")
+                                   }
+                                   if (!inherits(body$end_date, "POSIXt"))
+                                   {
+                                      stop("\"body$end_date\" doit être de classe \"POSIXt\"")
+                                   }
+                                }
+
+                                response <- httr::POST(url = sprintf("https://data.qivivo.com/api/v2/devices/thermostats/%s/absence",
+                                                                     object@UUID),
+                                                       body = body,
+                                                       httr::accept_json(),
+                                                       httr::add_headers(Authorization = sprintf("%s %s",                                                                                      object@token$credentials$token_type,
+                                                                                                 object@token$credentials$token_type,
+                                                                                                 object@token$credentials$access_token)),
+                                                       config = list(token = object@token))
+                             },
+                             "del" = {
+                                response <- httr::DELETE(url = sprintf("https://data.qivivo.com/api/v2/devices/thermostats/%s/absence",
+                                                                       object@UUID),
+                                                         httr::accept_json(),
+                                                         httr::add_headers(Authorization = sprintf("%s %s",                                                                                      object@token$credentials$token_type,
+                                                                                                   object@token$credentials$token_type,
+                                                                                                   object@token$credentials$access_token)),
+                                                         config = list(token = object@token))
+                             },
+                             stop("\"request\" ne peut prendre que les valeurs \"post\" ou \"del\""))
+
+                      if (httr::status_code(response) == 200)
+                      {
+                         message(httr::content(response)$message)
+                      }
+                      else
+                      {
+                         stop("Echec, veuillez recharger la page...")
+                      }
                    })
