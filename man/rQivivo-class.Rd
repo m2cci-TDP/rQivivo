@@ -2,7 +2,7 @@
 % Please edit documentation in R/rQivivo-Class.R
 \name{rQivivo-class}
 \alias{rQivivo-class}
-\title{rQivivo class}
+\title{rQivivo S4 class}
 \description{
 rQivivo class with OAuth2.0 using httr for API connection.
 See \href{https://documenter.getpostman.com/view/1147709/qivivo-api/2MsDNL#d64f1f8b-f8e9-6470-50d5-980393886046}{Qivivo API}.
@@ -15,3 +15,6 @@ See \href{https://documenter.getpostman.com/view/1147709/qivivo-api/2MsDNL#d64f1
 \item{\code{UUID}}{character: UUID of the thermostat.}
 }}
 
+\author{
+Theo DEVAUCOUP \email{theo.devaucoup@pm.me}
+}

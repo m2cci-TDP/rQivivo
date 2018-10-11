@@ -1,12 +1,25 @@
 Package: rQivivo
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Title: Communication functions for Qivivo using S4 class
+Version: 0.2.0
+Author: Theo DEVAUCOUP
+Maintainer: Theo DEVAUCOUP <theo.devaucoup@pm.me>
+Description: This package contrains functions and class for communication with Qivivo thermostat.
+    OAuth2.0 protocol is using with httr package.
+License:  GPL-3
+Depends: R (>= 3.4.4)
+Suggests:
+    methods,
+    httr,
+    shiny,
+    shinydashboard,
+    shinyjs
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.0
+Collate: 
+    'rQivivo-Class.R'
+    'rQivivo-Generics.R'
+    'rQivivo-Methods.R'
+    'rQivivo.R'
+    'runQivivo.R'
